@@ -10,6 +10,18 @@ app.use(cors())
 
 const repositories = []
 
+const existsValidationMiddleware = (req, res, next) => {
+  const { id } = req.params
+
+  let repository = repositories.find(repo => repo.id === id)
+
+  if(!repository) {
+    return res.status(400).json({ msg: 'Repositoty is not found.' })
+  }
+
+  return next()
+}
+
 app.get("/repositories", (req, res) => {
   return res.json(repositories)
 })
@@ -30,15 +42,11 @@ app.post("/repositories", (req, res) => {
   return res.json(repository)
 })
 
-app.put("/repositories/:id", (req, res) => {
+app.put("/repositories/:id", existsValidationMiddleware, (req, res) => {
   const { id } = req.params
   const { title, url, techs } = req.body
 
   let repository = repositories.find(repo => repo.id === id)
-
-  if(!repository) {
-    return res.status(400).json({ msg: 'Repositoty is not found.' })
-  }
 
   const { likes } = repository
 
@@ -49,28 +57,20 @@ app.put("/repositories/:id", (req, res) => {
   return res.json(repository)
 })
 
-app.delete("/repositories/:id", (req, res) => {
+app.delete("/repositories/:id", existsValidationMiddleware, (req, res) => {
   const { id } = req.params
   
   const index = repositories.findIndex(repo => repo.id === id)
-
-  if(index < 0) {
-    return res.status(400).json({ msg: 'Repository is not found.' })
-  }
 
   repositories.splice(index, 1)
   
   return res.status(204).send()
 })
 
-app.post("/repositories/:id/like", (req, res) => {
+app.post("/repositories/:id/like", existsValidationMiddleware, (req, res) => {
   const { id } = req.params
 
   const repository = repositories.find(repo => repo.id === id)
-
-  if(!repository) {
-    return res.status(400).json({ msg: 'Repository is not found.' })
-  }
 
   repository.likes++
 
